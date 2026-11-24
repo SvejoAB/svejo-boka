@@ -5,7 +5,7 @@
 import { CELL_MINUTES, type Rules } from "./rules";
 import { addDays, zonedToUtc } from "./time";
 
-export type EventSource = "own" | "school" | "sport";
+export type EventSource = "own" | "info";
 
 export interface CalEvent {
   id: string;
@@ -15,7 +15,7 @@ export interface CalEvent {
   start: number;
   end: number;
   allDay: boolean;
-  /** Own calendar: Google's Busy/Free and the person's RSVP. Others: true. */
+  /** Own calendar: Google's Busy/Free and the person's RSVP. Info calendars: false. */
   busy: boolean;
 }
 
@@ -34,18 +34,11 @@ export interface OverrideRef {
   kind: OverrideKind;
 }
 
-export type BlockReason =
-  | "beyond"
-  | "closed"
-  | "lunch"
-  | "school"
-  | "buffer"
-  | "busy"
-  | "allday"
-  | "sport";
+export type BlockReason = "beyond" | "closed" | "busy" | "allday";
 
 export type CellState =
-  | { kind: "free"; via: "rules" | "school" | "manual"; label?: string }
+  /** `label`: an info-calendar event at this time, shown but not blocking. */
+  | { kind: "free"; via: "rules" | "manual"; label?: string }
   | { kind: "booked"; bookingId: string; name: string }
   | { kind: "blocked"; reason: BlockReason; label?: string };
 
@@ -71,30 +64,19 @@ export interface Window {
   days: number;
 }
 
-/** Activity name of a TimeEdit event ("Föreläsning", "Övning", …), if any. */
-export function schoolActivity(title: string): string | undefined {
-  const m = /Aktivitet:\s*([^,]+)/.exec(title);
-  return m?.[1].trim();
-}
-
-/** Course code of a TimeEdit event, for labels. */
-export function schoolCourse(title: string): string | undefined {
-  const m = /Kurskod:\s*([A-Z]{2,4}\d{2,4}[A-Z]{0,2})/.exec(title);
-  return m?.[1];
+/** A short label for an event: "Föreläsning MVE655" for a TimeEdit title, the title without a " // team" suffix otherwise. */
+export function eventLabel(title: string): string {
+  const activity = /Aktivitet:\s*([^,]+)/.exec(title)?.[1].trim();
+  if (!activity) return title.replace(/\s*\/\/.*$/, "");
+  const short = SHORT_ACTIVITY[activity] ?? activity;
+  const course = /Kurskod:\s*([A-Z]{2,4}\d{2,4}[A-Z]{0,2})/.exec(title)?.[1];
+  return course ? `${short} ${course}` : short;
 }
 
 const SHORT_ACTIVITY: Record<string, string> = {
   Diskussionsseminarium: "Seminarium",
   Laboration: "Labb",
 };
-
-function schoolLabel(title: string): string {
-  const full = schoolActivity(title);
-  if (!full) return title;
-  const activity = SHORT_ACTIVITY[full] ?? full;
-  const course = schoolCourse(title);
-  return course ? `${activity} ${course}` : activity;
-}
 
 function overlaps(a: number, b: number, c: number, d: number): boolean {
   return a < d && c < b;
@@ -110,44 +92,25 @@ export function computeCells(
 ): DayCells[] {
   const horizonEnd = now + rules.horizonDays * 86400000;
   const overrideAt = new Map(overrides.map((o) => [o.start, o.kind]));
-  const free = new Set(rules.freeSchoolActivities.map((a) => a.toLowerCase()));
+  const busy = events.filter((e) => e.source === "own" && e.busy);
+  const info = events.filter((e) => e.source === "info");
 
-  const school = events.filter((e) => e.source === "school");
-  const schoolFree = school.filter((e) => free.has((schoolActivity(e.title) ?? "").toLowerCase()));
-  const schoolBlocking = school.filter((e) => !schoolFree.includes(e));
-  const ownBusy = events.filter((e) => e.source === "own" && e.busy);
-  const sport = events.filter((e) => e.source === "sport");
-
-  const buffer = rules.schoolBuffer * 60000;
-
-  function stateOf(s: number, e: number, minute: number, override?: OverrideKind): CellState {
+  // Bookings, then the owner's own opens and closes, then their own busy events. Nothing else blocks.
+  function stateOf(s: number, e: number, override?: OverrideKind): CellState {
     const booking = bookings.find((b) => overlaps(s, e, b.start, b.end));
     if (booking) return { kind: "booked", bookingId: booking.id, name: booking.name };
     if (s >= horizonEnd) return { kind: "blocked", reason: "beyond" };
     if (override === "close") return { kind: "blocked", reason: "closed" };
     if (override === "open") return { kind: "free", via: "manual" };
 
-    if (overlaps(minute, minute + CELL_MINUTES, rules.lunch[0], rules.lunch[1])) {
-      return { kind: "blocked", reason: "lunch" };
-    }
-    const lesson = schoolBlocking.find((ev) => overlaps(s, e, ev.start, ev.end));
-    if (lesson) return { kind: "blocked", reason: "school", label: schoolLabel(lesson.title) };
-    const timed = ownBusy.find((ev) => !ev.allDay && overlaps(s, e, ev.start, ev.end));
+    const timed = busy.find((ev) => !ev.allDay && overlaps(s, e, ev.start, ev.end));
     if (timed) return { kind: "blocked", reason: "busy", label: timed.title };
-    const training = sport.find((ev) => overlaps(s, e, ev.start, ev.end));
-    if (training) return { kind: "blocked", reason: "sport", label: training.title };
-    const allDay = ownBusy.find((ev) => ev.allDay && overlaps(s, e, ev.start, ev.end));
+    const allDay = busy.find((ev) => ev.allDay && overlaps(s, e, ev.start, ev.end));
     if (allDay) return { kind: "blocked", reason: "allday", label: allDay.title };
 
-    // Notices without an activity ("Anmälan … öppnar") block but need no travel time.
-    const near = schoolBlocking.find(
-      (ev) => schoolActivity(ev.title) && overlaps(s, e, ev.start - buffer, ev.end + buffer),
-    );
-    if (near) return { kind: "blocked", reason: "buffer", label: schoolLabel(near.title) };
-
-    const exercise = schoolFree.find((ev) => overlaps(s, e, ev.start, ev.end));
-    if (exercise) return { kind: "free", via: "school", label: schoolLabel(exercise.title) };
-
+    // Timed info events first, so a lecture shows on a day that also has an all-day info event.
+    const shown = info.find((ev) => !ev.allDay && overlaps(s, e, ev.start, ev.end)) ?? info.find((ev) => overlaps(s, e, ev.start, ev.end));
+    if (shown) return { kind: "free", via: "rules", label: eventLabel(shown.title) };
     return { kind: "free", via: "rules" };
   }
 
@@ -159,7 +122,7 @@ export function computeCells(
       const start = zonedToUtc(date, m);
       const end = start + CELL_MINUTES * 60000;
       const override = overrideAt.get(start);
-      const cell: Cell = { start, end, state: stateOf(start, end, m, override) };
+      const cell: Cell = { start, end, state: stateOf(start, end, override) };
       if (override) cell.override = override;
       if (start < now) cell.past = true;
       cells.push(cell);

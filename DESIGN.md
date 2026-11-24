@@ -19,14 +19,10 @@ colors:
   ev-booked: "#0b57d0"
   ev-free: "#e8f0fe"
   ev-free-fg: "#0842a0"
-  ev-school: "#e8e6f6"
-  ev-school-fg: "#3c3489"
+  ev-info: "#e8e6f6"
+  ev-info-fg: "#3c3489"
   ev-busy: "#d4efe9"
   ev-busy-fg: "#00574b"
-  ev-sport: "#e3f3e6"
-  ev-sport-fg: "#0d652d"
-  ev-gap: "#f1f3f4"
-  ev-gap-fg: "#5f6368"
   ev-closed: "#f6e7e6"
   ev-closed-fg: "#8c1d18"
   ev-holiday: "#fce8e6"
@@ -174,14 +170,11 @@ A neutral grey-white ground with one saturated blue and a family of soft event t
 Each kind is a tint plus a same-hue ink. The legend in the sidebar lists them in this order.
 - **booked** (Bokad): solid `ev-booked`, white text. The only filled-solid block.
 - **free** (Bokbar): `ev-free` on `ev-free-fg`.
-- **free-school** (Övning, Handledning): same look as free, labelled with the session name.
+- **info** (Bokbar, med händelse): grey-violet `ev-info`, labelled with the event from an info calendar (a lecture, a training). Bookable.
 - **short** (Ledig men för kort): white with a dashed `ev-free-fg` 40% border.
 - **opened** (Öppnad av dig): `ev-free` with a 2px solid `ev-free-fg` border.
 - **closed** (Stängd av dig): `ev-closed` with red-grey diagonal stripes (`destructive` at 25%, 2px on 6px, -45deg), ink `ev-closed-fg`.
-- **school** (Skola): grey-violet `ev-school`.
 - **busy** (Upptagen, own calendar): teal `ev-busy`.
-- **sport** (Träning): green `ev-sport`.
-- **gap** (Lunch, Restid): `ev-gap` with a 6px dot grid (black at 16%).
 - **allday** (Heldag): `muted` on `muted-foreground`; also shown as chips in the all-day row.
 - **beyond** (Utanför 4 veckor): `muted` at 60%, no action.
 - **holiday** chips in the all-day row and month cells use `ev-holiday` on `ev-holiday-fg`.
@@ -280,7 +273,7 @@ shadcn new-york input: 36px, 6px corners, `input` stroke, `shadow-xs`. Focus: bl
 The top bar is a 64px row on the shell with round ghost icon buttons and a pill outline "Idag" and view select. The sidebar's legend shows each kind as a 12px round swatch (never a square that reads as a checkbox).
 
 ### Event block (signature)
-A rounded 6px block positioned on the 24px half-hour grid, labelled with what it is (a name, "Ledig", "Lunch", "Restid", "Stängd av dig", the course event) and, when two or more half-hours tall, its time range. Patterned kinds (gap, closed) put their text on a solid backing of the tint so it stays legible. Clicking opens a 320px popover with a round kind dot, title, day and time, the reason, and pill actions to open, close or clear that half-hour or the whole block; a booking's popover shows email, phone, message, "Gå med i Meet" and "Avboka". Hover darkens by 5% brightness.
+A rounded 6px block positioned on the 24px half-hour grid, labelled with what it is (a name, "Ledig", "Stängd av dig", the course event) and, when two or more half-hours tall, its time range. The patterned kind (closed) puts its text on a solid backing of the tint so it stays legible. Clicking opens a 320px popover with a round kind dot, title, day and time, the reason, and pill actions to open, close or clear that half-hour or the whole block; a booking's popover shows email, phone, message, "Gå med i Meet" and "Avboka". Hover darkens by 5% brightness.
 
 **The Named Block Rule.** Every closed time is a named block. No time in the owner grid is blank or unexplained: if it can't be booked, a block says why.
 
@@ -303,7 +296,7 @@ A rounded 6px block positioned on the 24px half-hour grid, labelled with what it
 - **Don't** bring back the almanac world (paper, cloth, ruled-ledger styling) or the svejo.se look.
 
 ### Adaptations from the direction contract
-- The contract says "lunch and travel gaps dotted grey, manual closes striped red-grey"; the build matches, with text on a solid backing so the pattern never sits under letters.
+- The contract says "manual closes striped red-grey"; the build matches, with text on a solid backing so the pattern never sits under letters. (Lunch and travel gaps were removed on 2026-11-24.)
 - The contract places "copy link" in the top bar; the build puts "Kopiera bokningslänk" in the sidebar as the floating action and gives the top bar an open-booking-page icon button instead.
 - The contract's hour gutter "08–20" is built as an 08:00 start with labels from 09:00 (the first line is the grid top).
 - The build adds kinds the contract did not name: short (dashed), opened (bordered), allday, beyond and holiday.

@@ -8,10 +8,10 @@ describe("colorVars", () => {
   });
 
   it("gives a changed kind a pale fill, dark text and its own dot", () => {
-    expect(colorVars({ school: "#ff0000" })).toEqual({
-      "--ev-school": "color-mix(in oklab, #ff0000 20%, white)",
-      "--ev-school-fg": "color-mix(in oklab, #ff0000 50%, black)",
-      "--ev-school-dot": "#ff0000",
+    expect(colorVars({ info: "#ff0000" })).toEqual({
+      "--ev-info": "color-mix(in oklab, #ff0000 20%, white)",
+      "--ev-info-fg": "color-mix(in oklab, #ff0000 50%, black)",
+      "--ev-info-dot": "#ff0000",
     });
   });
 
@@ -29,8 +29,11 @@ describe("parseColors", () => {
     expect(parseColors({ free: "#34a853", closed: "#000000" })).toEqual({ free: "#34a853", closed: "#000000" });
   });
 
-  it("rejects unknown kinds and anything that is not #rrggbb", () => {
-    expect(parseColors({ lunch: "#34a853" })).toBeNull();
+  it("drops kinds that no longer exist", () => {
+    expect(parseColors({ gap: "#34a853", free: "#000000" })).toEqual({ free: "#000000" });
+  });
+
+  it("rejects anything that is not #rrggbb", () => {
     expect(parseColors({ free: "red" })).toBeNull();
     expect(parseColors({ free: "#34a853; background: url(x)" })).toBeNull();
     expect(parseColors(["#34a853"])).toBeNull();

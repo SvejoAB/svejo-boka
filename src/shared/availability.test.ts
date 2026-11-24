@@ -32,90 +32,50 @@ function day(cells: { date: string; cells: Cell[] }[], date: string) {
 }
 const clocks = (slots: number[]) => slots.map((s) => formatClock(minutesOf(s)));
 
-// Thursday 5 November 2026, as in the real timetable.
+// Thursday 5 November 2026, as in the real timetable: a school calendar and a team calendar, shown as info.
 const thursday: CalEvent[] = [
-  ev("school", "2026-11-05", "08:00", "09:45", timeedit("Föreläsning")),
-  ev("school", "2026-11-05", "10:00", "11:45", timeedit("Övning")),
-  ev("school", "2026-11-05", "13:15", "15:00", timeedit("Diskussionsseminarium", "DIT213GU")),
-  ev("school", "2026-11-05", "15:15", "17:00", timeedit("Handledning", "DIT213GU")),
-  ev("sport", "2026-11-05", "17:00", "18:30", "Eftersäsongsträning/Provspel // Herr - IK Virgo"),
+  ev("info", "2026-11-05", "08:00", "09:45", timeedit("Föreläsning"), false),
+  ev("info", "2026-11-05", "10:00", "11:45", timeedit("Övning"), false),
+  ev("info", "2026-11-05", "13:15", "15:00", timeedit("Diskussionsseminarium", "DIT213GU"), false),
+  ev("info", "2026-11-05", "15:15", "17:00", timeedit("Handledning", "DIT213GU"), false),
+  ev("info", "2026-11-05", "17:00", "18:30", "Eftersäsongsträning/Provspel // Herr - IK Virgo", false),
 ];
 
+const labelAt = (days: { date: string; cells: Cell[] }[], date: string, clock: string) => {
+  const c = days.find((d) => d.date === date)!.cells.find((x) => x.start === at(date, clock))!;
+  return c.state.kind === "free" ? c.state.label : undefined;
+};
+
 describe("computeCells", () => {
-  it("applies lectures, travel gaps, Övning, Handledning, lunch and training", () => {
+  it("shows info-calendar events but keeps every half-hour bookable: no lunch, no travel time", () => {
     const days = computeCells({ from: "2026-11-05", days: 1 }, rules, thursday, [], [], NOW);
-    expect(day(days, "2026-11-05")).toEqual([
-      "08:00 school",
-      "08:30 school",
-      "09:00 school",
-      "09:30 school",
-      "10:00 buffer", // lecture ends 09:45, gap until 10:15
-      "10:30 free:school",
-      "11:00 free:school",
-      "11:30 free:school",
-      "12:00 lunch",
-      "12:30 lunch",
-      "13:00 school", // seminar starts 13:15
-      "13:30 school",
-      "14:00 school",
-      "14:30 school",
-      "15:00 buffer", // seminar ends 15:00, gap until 15:30
-      "15:30 free:school",
-      "16:00 free:school",
-      "16:30 free:school",
-      "17:00 sport",
-      "17:30 sport",
-      "18:00 sport",
-      "18:30 free:rules",
-      "19:00 free:rules",
-      "19:30 free:rules",
-    ]);
-    const slots = bookableSlots(days, rules, NOW)[0].slots;
-    expect(clocks(slots)).toEqual(["10:30", "11:00", "15:30", "16:00", "18:30", "19:00"]);
-  });
-
-  it("matches the 10:00 lecture example: last start 08:30, nothing before 08:00", () => {
-    const monday = [ev("school", "2026-11-09", "10:00", "11:45", timeedit("Föreläsning"))];
-    const days = computeCells({ from: "2026-11-09", days: 1 }, rules, monday, [], [], NOW);
+    expect(day(days, "2026-11-05").every((c) => c.endsWith("free:rules"))).toBe(true);
+    expect(labelAt(days, "2026-11-05", "08:00")).toBe("Föreläsning MVE655");
+    expect(labelAt(days, "2026-11-05", "09:30")).toBe("Föreläsning MVE655");
+    expect(labelAt(days, "2026-11-05", "12:00")).toBeUndefined();
+    expect(labelAt(days, "2026-11-05", "13:00")).toBe("Seminarium DIT213GU");
+    expect(labelAt(days, "2026-11-05", "17:30")).toBe("Eftersäsongsträning/Provspel");
     const slots = clocks(bookableSlots(days, rules, NOW)[0].slots);
-    expect(slots.slice(0, 2)).toEqual(["08:00", "08:30"]);
-    expect(slots).not.toContain("09:00");
-    expect(slots).not.toContain("12:00");
-    expect(slots[2]).toBe("13:00"); // 11:45 + 30 min gap, then lunch until 13:00
-    expect(slots.at(-1)).toBe("19:00"); // last meeting ends 20:00
+    expect(slots).toHaveLength(23); // 08:00 to 19:00, every half hour
+    expect(slots).toContain("12:00");
   });
 
-  it("blocks every school activity except Övning and Handledning", () => {
-    for (const activity of ["Workshop", "Laboration", "Presentation", "Diskussionsseminarium", "Tentamen"]) {
-      const days = computeCells(
-        { from: "2026-11-10", days: 1 },
-        rules,
-        [ev("school", "2026-11-10", "14:00", "16:00", timeedit(activity))],
-        [],
-        [],
-        NOW,
-      );
-      expect(day(days, "2026-11-10")).toContain("14:00 school");
-    }
-    const days = computeCells(
-      { from: "2026-11-10", days: 1 },
-      rules,
-      [ev("school", "2026-11-10", "14:00", "16:00", "Anmälan till omtentamen i januari öppnar")],
-      [],
-      [],
-      NOW,
-    );
-    expect(day(days, "2026-11-10")).toContain("14:00 school"); // unknown school entries block too
-    expect(day(days, "2026-11-10")).toContain("16:00 free:rules"); // but take no travel gap
-  });
-
-  it("lets a lecture win over an Övning at the same time", () => {
-    const clash = [
-      ev("school", "2026-11-10", "13:15", "15:00", timeedit("Föreläsning")),
-      ev("school", "2026-11-10", "13:15", "15:00", timeedit("Övning", "DIT213GU")),
+  it("lets an own busy event close the time over an info event", () => {
+    const events = [
+      ev("info", "2026-11-10", "13:00", "15:00", timeedit("Föreläsning"), false),
+      ev("own", "2026-11-10", "14:00", "15:00", "Kundmöte"),
+      { ...allDay("2026-11-10", "2026-11-11", "Match // Herr - IK Virgo", false), source: "info" as const },
     ];
-    const days = computeCells({ from: "2026-11-10", days: 1 }, rules, clash, [], [], NOW);
-    expect(day(days, "2026-11-10")).toContain("13:30 school");
+    const days = computeCells({ from: "2026-11-10", days: 1 }, rules, events, [], [], NOW);
+    const tue = day(days, "2026-11-10");
+    expect(tue).toContain("13:30 free:rules");
+    expect(tue).toContain("14:00 busy");
+    expect(tue).toContain("14:30 busy");
+    expect(tue).toContain("15:00 free:rules");
+    // An all-day info event labels the rest of the day without closing it.
+    expect(labelAt(days, "2026-11-10", "13:30")).toBe("Föreläsning MVE655");
+    expect(labelAt(days, "2026-11-10", "08:00")).toBe("Match");
+    expect(labelAt(days, "2026-11-10", "15:00")).toBe("Match");
   });
 
   it("follows Busy/Free for own events, including all-day ones", () => {
@@ -126,8 +86,8 @@ describe("computeCells", () => {
       ev("own", "2026-11-16", "14:00", "15:00", "Flight", false),
     ];
     const days = computeCells({ from: "2026-11-12", days: 5 }, rules, events, [], [], NOW);
-    expect(day(days, "2026-11-12").every((c) => c.endsWith("allday") || c.endsWith("lunch"))).toBe(true);
-    expect(day(days, "2026-11-13").every((c) => c.includes("free") || c.endsWith("lunch"))).toBe(true);
+    expect(day(days, "2026-11-12").every((c) => c.endsWith("allday"))).toBe(true);
+    expect(day(days, "2026-11-13").every((c) => c.includes("free"))).toBe(true);
     const mon = day(days, "2026-11-16");
     expect(mon).toContain("09:00 busy");
     expect(mon).toContain("09:30 busy");
@@ -135,8 +95,8 @@ describe("computeCells", () => {
     expect(mon).toContain("14:00 free:rules");
   });
 
-  it("lets manual overrides win over rules but never over bookings", () => {
-    const lecture = [ev("school", "2026-11-09", "10:00", "11:45", timeedit("Föreläsning"))];
+  it("lets manual overrides win over the calendar but never over bookings", () => {
+    const meeting = [ev("own", "2026-11-09", "10:00", "11:45", "Möte")];
     const overrides = [
       { start: at("2026-11-09", "10:00"), kind: "open" as const },
       { start: at("2026-11-09", "10:30"), kind: "open" as const },
@@ -144,11 +104,11 @@ describe("computeCells", () => {
       { start: at("2026-11-09", "17:00"), kind: "open" as const },
     ];
     const bookings = [{ id: "b1", name: "Anna", start: at("2026-11-09", "17:00"), end: at("2026-11-09", "18:00") }];
-    const days = computeCells({ from: "2026-11-09", days: 1 }, rules, lecture, bookings, overrides, NOW);
+    const days = computeCells({ from: "2026-11-09", days: 1 }, rules, meeting, bookings, overrides, NOW);
     const mon = day(days, "2026-11-09");
     expect(mon).toContain("10:00 free:manual");
     expect(mon).toContain("10:30 free:manual");
-    expect(mon).toContain("11:00 school");
+    expect(mon).toContain("11:00 busy");
     expect(mon).toContain("15:00 closed");
     expect(mon).toContain("17:00 booked");
     const slots = clocks(bookableSlots(days, rules, NOW)[0].slots);
@@ -186,11 +146,11 @@ describe("time", () => {
 
 describe("past half-hours", () => {
   it("keep their meaning for the owner view but are never bookable", () => {
-    const lecture = [ev("school", "2026-11-04", "08:00", "09:45", timeedit("Föreläsning"))];
-    const days = computeCells({ from: "2026-11-04", days: 1 }, rules, lecture, [], [], NOW);
+    const meeting = [ev("own", "2026-11-04", "08:00", "09:45", "Möte")];
+    const days = computeCells({ from: "2026-11-04", days: 1 }, rules, meeting, [], [], NOW);
     const cells = days[0].cells;
     expect(cells[0].past).toBe(true);
-    expect(cells[0].state).toMatchObject({ kind: "blocked", reason: "school" });
+    expect(cells[0].state).toMatchObject({ kind: "blocked", reason: "busy" });
     expect(cells.find((c) => c.start === at("2026-11-04", "10:00"))?.past).toBeUndefined();
     expect(bookableSlots(days, rules, NOW)[0].slots).toEqual([]);
   });

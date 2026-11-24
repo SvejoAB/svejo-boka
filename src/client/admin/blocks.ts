@@ -8,14 +8,11 @@ export type Action = "open" | "close" | "clear";
 export type Kind =
   | "booked"
   | "free"
-  | "free-school"
+  | "info"
   | "short"
   | "opened"
   | "closed"
-  | "school"
   | "busy"
-  | "sport"
-  | "gap"
   | "allday"
   | "beyond";
 
@@ -34,14 +31,11 @@ export interface Look {
 export const KIND_CLASS: Record<Kind, string> = {
   booked: "bg-ev-booked text-ev-booked-fg",
   free: "bg-ev-free text-ev-free-fg",
-  "free-school": "bg-ev-free text-ev-free-fg",
+  info: "bg-ev-info text-ev-info-fg",
   short: "bg-background text-ev-free-fg border border-dashed border-ev-free-fg/40",
   opened: "bg-ev-free text-ev-free-fg border-2 border-ev-free-fg",
   closed: "stripes-closed bg-ev-closed text-ev-closed-fg",
-  school: "bg-ev-school text-ev-school-fg",
   busy: "bg-ev-busy text-ev-busy-fg",
-  sport: "bg-ev-sport text-ev-sport-fg",
-  gap: "dots bg-ev-gap text-ev-gap-fg",
   allday: "bg-muted text-muted-foreground",
   beyond: "bg-muted/60 text-muted-foreground",
 };
@@ -50,14 +44,11 @@ export const KIND_CLASS: Record<Kind, string> = {
 export const KIND_DOT: Record<Kind, string> = {
   booked: "bg-ev-booked",
   free: "bg-ev-free-dot",
-  "free-school": "bg-ev-free-dot",
+  info: "bg-ev-info-dot",
   short: "bg-background ring-1 ring-inset ring-ev-free-fg/50",
   opened: "bg-ev-free ring-2 ring-inset ring-ev-free-fg",
   closed: "stripes-closed bg-ev-closed",
-  school: "bg-ev-school-dot",
   busy: "bg-ev-busy-dot",
-  sport: "bg-ev-sport-dot",
-  gap: "dots bg-ev-gap ring-1 ring-inset ring-black/10",
   allday: "bg-[#9aa0a6]",
   beyond: "bg-muted",
 };
@@ -78,22 +69,22 @@ function baseLook(cell: AdminCell, bookable: boolean): Look {
     if (s.via === "manual") {
       return { key: "opened", kind: "opened", label: "Öppnad av dig", action: "clear", reason: "Du har öppnat tiden för bokning." };
     }
-    const label = s.via === "school" ? (s.label ?? "Övning") : "Ledig";
+    const label = s.label ?? "Ledig";
     if (!bookable && !cell.past) {
       return {
         key: `short:${label}`,
         kind: "short",
-        label: s.via === "school" ? `${label} · för kort` : "Ledig · för kort",
+        label: `${label} · för kort`,
         action: "close",
         reason: "Ledig, men ett helt möte ryms inte här, eller tiden ligger närmare än din framförhållning.",
       };
     }
     return {
       key: `free:${label}`,
-      kind: s.via === "school" ? "free-school" : "free",
+      kind: s.label ? "info" : "free",
       label,
       action: "close",
-      reason: s.via === "school" ? `${label}: räknas som ledig tid. Bokbar.` : "Bokbar.",
+      reason: s.label ? `${label}: från en kalender som bara visas. Bokbar tills du stänger tiden.` : "Bokbar.",
     };
   }
   const label = s.label ?? "";
@@ -102,16 +93,8 @@ function baseLook(cell: AdminCell, bookable: boolean): Look {
       return { key: "beyond", kind: "beyond", label: "Utanför 4 veckor", action: null, reason: "Längre fram än fyra veckor går inte att boka." };
     case "closed":
       return { key: "closed", kind: "closed", label: "Stängd av dig", action: "clear", reason: "Du har stängt tiden för bokning." };
-    case "lunch":
-      return { key: "lunch", kind: "gap", label: "Lunch", action: "open", reason: "Lunch, 12–13. Stängd om du inte öppnar den." };
-    case "buffer":
-      return { key: "buffer", kind: "gap", label: "Restid", action: "open", reason: `30 minuter restid kring ${label}.` };
-    case "school":
-      return { key: `school:${label}`, kind: "school", label, action: "open", reason: "Skolan. Stängd för bokning." };
     case "busy":
       return { key: `busy:${label}`, kind: "busy", label, action: "open", reason: "Upptagen i din kalender." };
-    case "sport":
-      return { key: `sport:${label}`, kind: "sport", label: label.replace(/\s*\/\/.*$/, ""), action: "open", reason: "Träning. Stängd för bokning." };
     case "allday":
       return { key: `allday:${label}`, kind: "allday", label, action: "open", reason: `Heldag: ${label}. Stängd för bokning.` };
   }
@@ -154,13 +137,11 @@ export function rangeActions(cells: AdminCell[]): Record<Action, AdminCell[]> {
 
 export const LEGEND: [Kind, string][] = [
   ["free", "Bokbar"],
+  ["info", "Bokbar, med händelse"],
   ["short", "Ledig men för kort"],
   ["booked", "Bokad"],
   ["opened", "Öppnad av dig"],
   ["closed", "Stängd av dig"],
-  ["school", "Skola"],
   ["busy", "Upptagen"],
-  ["sport", "Träning"],
-  ["gap", "Lunch och restid"],
   ["allday", "Heldag"],
 ];

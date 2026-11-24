@@ -3,7 +3,7 @@
 
 import { COLOR_KINDS, type EventColors } from "../../shared/colors";
 
-const DOT_KINDS = new Set(["free", "school", "busy", "sport"]);
+const DOT_KINDS = new Set(["free", "info", "busy"]);
 
 export function colorVars(colors: EventColors): Record<string, string> {
   const vars: Record<string, string> = {};

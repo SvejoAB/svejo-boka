@@ -1,6 +1,6 @@
 # Svejo Boka
 
-A personal booking page that follows your real calendar, including a school timetable. People pick a free hour at `/<you>`. The booking becomes an event in your Google Calendar, with a Google Meet link and an invite to the booker. You see and change your availability at `/admin`. It runs as one Cloudflare Worker; [boka.svejo.se/johan](https://boka.svejo.se/johan) is the original.
+A personal booking page that follows your own Google calendar. Other calendars, like a school timetable, can be shown beside it without closing any time. People pick a free hour at `/<you>`. The booking becomes an event in your Google Calendar, with a Google Meet link and an invite to the booker. You see and change your availability at `/admin`. It runs as one Cloudflare Worker; [boka.svejo.se/johan](https://boka.svejo.se/johan) is the original.
 
 One Cloudflare Worker serves the React app and a JSON API. D1 holds bookings, manual overrides and the encrypted Google refresh token. Product rules: `PRODUCT.md`.
 
@@ -9,7 +9,7 @@ One Cloudflare Worker serves the React app and a JSON API. D1 holds bookings, ma
 | What | Where |
 |---|---|
 | People and their calendars (not in git) | `src/shared/people.ts`, copied from `people.example.ts` |
-| Rules (hours, lunch, travel gap, horizon, notice) | `src/shared/rules.ts` |
+| Rules (hours, meeting length, horizon, notice) | `src/shared/rules.ts` |
 | Availability engine (pure, tested) | `src/shared/availability.ts` |
 | Swedish red days | `src/shared/holidays.ts` |
 | API, Google sign-in, booking | `src/worker/` |
@@ -24,12 +24,10 @@ Every day is split into half-hours from 08:00 to 20:00, Stockholm time. The firs
 1. Booked through this tool
 2. In the past, or more than 28 days ahead
 3. Closed or opened by hand in `/admin`
-4. Lunch, 12:00–13:00
-5. A school event, except Övning and Handledning
-6. A busy event in the own calendar, a training in a sport calendar, or an all-day busy event
-7. Within 30 minutes of a school activity (travel gap); TimeEdit notices without an activity type get no gap
-8. Övning or Handledning (bookable)
-9. Otherwise free
+4. A busy event in the own calendar, timed or all-day (Google's Busy/Free; declined events don't count)
+5. Otherwise free. An event from an info calendar is shown on the free time in `/admin`, but the time stays bookable until you close it.
+
+There are no other rules: no lunch, no travel time, no special cases. Drag across the week in `/admin` to close or open any range.
 
 A meeting can start where two free half-hours in a row begin, at least the notice from now (48 hours by default, set in `/admin`). Double bookings are prevented in the database: each booking claims its half-hours in `booking_cells`, whose primary key lets only one booking hold a cell.
 

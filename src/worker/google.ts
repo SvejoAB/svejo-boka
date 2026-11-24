@@ -150,7 +150,7 @@ function normalize(e: ApiEvent, source: EventSource): CalEvent | null {
     : Date.parse(e.end.dateTime!);
   if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
 
-  let busy = true;
+  let busy = false;
   if (source === "own") {
     const self = e.attendees?.find((a) => a.self);
     busy = e.transparency !== "transparent" && self?.responseStatus !== "declined";
