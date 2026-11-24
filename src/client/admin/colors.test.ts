@@ -18,6 +18,9 @@ describe("colorVars", () => {
   it("keeps bookings solid with readable text", () => {
     expect(colorVars({ booked: "#ffeb3b" })).toEqual({ "--ev-booked": "#ffeb3b", "--ev-booked-fg": "#1f1f1f" });
     expect(colorVars({ booked: "#1a237e" })["--ev-booked-fg"]).toBe("#ffffff");
+    expect(colorVars({ booked: "#0b57d0" })["--ev-booked-fg"]).toBe("#ffffff");
+    // Medium grey: white would be 2.6:1, dark text 6.3:1.
+    expect(colorVars({ booked: "#a0a0a0" })["--ev-booked-fg"]).toBe("#1f1f1f");
   });
 });
 
