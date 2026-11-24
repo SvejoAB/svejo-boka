@@ -1,0 +1,11 @@
+node_modules
+dist
+.wrangler
+.dev.vars*
+!.dev.vars.example
+*.tsbuildinfo
+worker-configuration.d.ts.bak
+.impeccable/
+.old-boka-dns-record.json
+.env
+src/shared/people.ts

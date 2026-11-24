@@ -1,0 +1,153 @@
+@import "@fontsource-variable/inter";
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Light calendar palette: white surfaces on a pale shell, one blue accent. */
+:root {
+  --radius: 0.5rem;
+  --background: #ffffff;
+  --foreground: #1f1f1f;
+  --shell: #f8fafd;
+  --card: #ffffff;
+  --card-foreground: #1f1f1f;
+  --popover: #ffffff;
+  --popover-foreground: #1f1f1f;
+  --primary: #0b57d0;
+  --primary-foreground: #ffffff;
+  --secondary: #e9eef6;
+  --secondary-foreground: #1f1f1f;
+  --muted: #f1f3f4;
+  --muted-foreground: #5f6368;
+  --accent: #e9eef6;
+  --accent-foreground: #1f1f1f;
+  --destructive: #b3261e;
+  --border: #dadce0;
+  --input: #c4c7c5;
+  --ring: #0b57d0;
+  --selected: #c2e7ff;
+  --selected-foreground: #001d35;
+  --now: #ea4335;
+
+  /* Event kinds in the owner calendar. */
+  --ev-booked: #0b57d0;
+  --ev-booked-fg: #ffffff;
+  --ev-free: #e8f0fe;
+  --ev-free-fg: #0842a0;
+  --ev-school: #e8e6f6;
+  --ev-school-fg: #3c3489;
+  --ev-busy: #d4efe9;
+  --ev-busy-fg: #00574b;
+  --ev-sport: #e3f3e6;
+  --ev-sport-fg: #0d652d;
+  --ev-gap: #f1f3f4;
+  --ev-gap-fg: #5f6368;
+  --ev-closed: #f6e7e6;
+  --ev-closed-fg: #8c1d18;
+  --ev-holiday: #fce8e6;
+  --ev-holiday-fg: #a50e0e;
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-shell: var(--shell);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-selected: var(--selected);
+  --color-selected-foreground: var(--selected-foreground);
+  --color-now: var(--now);
+  --color-ev-booked: var(--ev-booked);
+  --color-ev-booked-fg: var(--ev-booked-fg);
+  --color-ev-free: var(--ev-free);
+  --color-ev-free-fg: var(--ev-free-fg);
+  --color-ev-school: var(--ev-school);
+  --color-ev-school-fg: var(--ev-school-fg);
+  --color-ev-busy: var(--ev-busy);
+  --color-ev-busy-fg: var(--ev-busy-fg);
+  --color-ev-sport: var(--ev-sport);
+  --color-ev-sport-fg: var(--ev-sport-fg);
+  --color-ev-gap: var(--ev-gap);
+  --color-ev-gap-fg: var(--ev-gap-fg);
+  --color-ev-closed: var(--ev-closed);
+  --color-ev-closed-fg: var(--ev-closed-fg);
+  --color-ev-holiday: var(--ev-holiday);
+  --color-ev-holiday-fg: var(--ev-holiday-fg);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    font-feature-settings: "tnum" 1, "cv11" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-background text-foreground;
+    min-height: 100dvh;
+  }
+  ::selection {
+    background: var(--selected);
+    color: var(--selected-foreground);
+  }
+  input,
+  textarea {
+    caret-color: var(--primary);
+  }
+  a {
+    text-underline-offset: 0.2em;
+  }
+  * {
+    scrollbar-color: #c4c7c5 transparent;
+    scrollbar-width: thin;
+  }
+}
+
+/* Lunch and travel gaps: a fine dot grid on grey. */
+@utility dots {
+  background-image: radial-gradient(rgb(0 0 0 / 0.16) 1px, transparent 1.3px);
+  background-size: 6px 6px;
+}
+/* Closed by the owner: red-grey stripes, like a declined event. */
+@utility stripes-closed {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgb(179 38 30 / 0.25) 0 2px,
+    transparent 2px 6px
+  );
+}
+
+/* Calendar days are round, like the week header. */
+[data-day] {
+  border-radius: 9999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}

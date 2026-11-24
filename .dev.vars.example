@@ -1,0 +1,9 @@
+GOOGLE_CLIENT_ID=mock-client
+GOOGLE_CLIENT_SECRET=mock-secret
+SESSION_SECRET=change-me-64-hex
+TOKEN_KEY=change-me-64-hex
+PUBLIC_URL=http://localhost:5173
+GOOGLE_MOCK_URL=http://localhost:8788
+RESEND_API_KEY=mock
+RESEND_MOCK_URL=http://localhost:8788
+EMAIL_FROM=noreply@svejo.se
