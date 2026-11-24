@@ -64,7 +64,7 @@ describe("computeCells", () => {
     const events = [
       ev("info", "2026-11-10", "13:00", "15:00", timeedit("Föreläsning"), false),
       ev("own", "2026-11-10", "14:00", "15:00", "Kundmöte"),
-      allDay("2026-11-10", "2026-11-11", "Info heldag", false),
+      { ...allDay("2026-11-10", "2026-11-11", "Match // Herr - IK Virgo", false), source: "info" as const },
     ];
     const days = computeCells({ from: "2026-11-10", days: 1 }, rules, events, [], [], NOW);
     const tue = day(days, "2026-11-10");
@@ -72,6 +72,10 @@ describe("computeCells", () => {
     expect(tue).toContain("14:00 busy");
     expect(tue).toContain("14:30 busy");
     expect(tue).toContain("15:00 free:rules");
+    // An all-day info event labels the rest of the day without closing it.
+    expect(labelAt(days, "2026-11-10", "13:30")).toBe("Föreläsning MVE655");
+    expect(labelAt(days, "2026-11-10", "08:00")).toBe("Match");
+    expect(labelAt(days, "2026-11-10", "15:00")).toBe("Match");
   });
 
   it("follows Busy/Free for own events, including all-day ones", () => {

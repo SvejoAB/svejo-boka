@@ -108,7 +108,8 @@ export function computeCells(
     const allDay = busy.find((ev) => ev.allDay && overlaps(s, e, ev.start, ev.end));
     if (allDay) return { kind: "blocked", reason: "allday", label: allDay.title };
 
-    const shown = info.find((ev) => !ev.allDay && overlaps(s, e, ev.start, ev.end));
+    // Timed info events first, so a lecture shows on a day that also has an all-day info event.
+    const shown = info.find((ev) => !ev.allDay && overlaps(s, e, ev.start, ev.end)) ?? info.find((ev) => overlaps(s, e, ev.start, ev.end));
     if (shown) return { kind: "free", via: "rules", label: eventLabel(shown.title) };
     return { kind: "free", via: "rules" };
   }
