@@ -1,4 +1,4 @@
-import { Bell, Mail, Plus, X } from "lucide-react";
+import { Bell, Mail, Palette, Plus, RotateCcw, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AdminSettings } from "../../shared/api";
+import { COLOR_KINDS, COLOR_LABELS, DEFAULT_COLORS, type EventColors } from "../../shared/colors";
 import { request, RequestError } from "../api";
+import { applyColors } from "./colors";
 
 export function hoursLabel(minutes: number): string {
   const h = minutes / 60;
@@ -29,6 +31,7 @@ export function SettingsDialog(props: { open: boolean; onOpenChange: (open: bool
   const [settings, setSettings] = useState<AdminSettings | null>(null);
   const [notice, setNotice] = useState(0);
   const [reminders, setReminders] = useState<number[]>([]);
+  const [colors, setColors] = useState<EventColors>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,15 +43,21 @@ export function SettingsDialog(props: { open: boolean; onOpenChange: (open: bool
         setSettings(s);
         setNotice(s.minNotice);
         setReminders(s.reminders);
+        setColors(s.colors);
       })
       .catch(() => setError("Inställningarna gick inte att hämta."));
   }, [props.open]);
+
+  // Preview colours while the dialog is open; closing without saving brings the saved ones back.
+  useEffect(() => {
+    if (settings) applyColors(props.open ? colors : settings.colors);
+  }, [props.open, colors, settings]);
 
   async function save() {
     setSaving(true);
     setError(null);
     try {
-      const s = await request<AdminSettings>("/api/admin/settings", { method: "PUT", body: { minNotice: notice, reminders } });
+      const s = await request<AdminSettings>("/api/admin/settings", { method: "PUT", body: { minNotice: notice, reminders, colors } });
       setSettings(s);
       toast("Inställningarna är sparade");
       props.onOpenChange(false);
@@ -157,6 +166,45 @@ export function SettingsDialog(props: { open: boolean; onOpenChange: (open: bool
                 En påminnelse skickas bara om bokningen gjordes innan dess, så den som bokar med kort varsel får ingen
                 påminnelse för en tid som redan passerat.
               </p>
+            </section>
+
+            <Separator />
+
+            <section className="grid gap-2">
+              <h3 className="flex items-center gap-2 text-base font-medium">
+                <Palette className="size-4 text-muted-foreground" aria-hidden />
+                Färger i kalendern
+              </h3>
+              <p className="text-sm text-muted-foreground">Kalendern visar färgen medan du väljer. Spara för att behålla den.</p>
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-1">
+                {COLOR_KINDS.map((kind) => (
+                  <li key={kind}>
+                    <label className="flex cursor-pointer items-center gap-2.5 py-1 text-sm">
+                      <input
+                        type="color"
+                        value={colors[kind] ?? DEFAULT_COLORS[kind]}
+                        onChange={(e) => {
+                          const value = e.target.value.toLowerCase();
+                          setColors((c) => {
+                            const next = { ...c, [kind]: value };
+                            // Picking the built-in colour again restores the built-in look.
+                            if (value === DEFAULT_COLORS[kind]) delete next[kind];
+                            return next;
+                          });
+                        }}
+                        className="size-7 shrink-0 cursor-pointer rounded-full border-0 bg-transparent p-0 [&::-moz-color-swatch]:rounded-full [&::-moz-color-swatch]:border-black/10 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-black/10 [&::-webkit-color-swatch-wrapper]:p-0"
+                      />
+                      {COLOR_LABELS[kind]}
+                    </label>
+                  </li>
+                ))}
+              </ul>
+              {Object.keys(colors).length > 0 && (
+                <Button variant="ghost" size="sm" className="justify-self-start rounded-full" onClick={() => setColors({})}>
+                  <RotateCcw />
+                  Återställ standardfärgerna
+                </Button>
+              )}
             </section>
 
             <Separator />

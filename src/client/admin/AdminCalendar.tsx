@@ -18,12 +18,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ConfirmCancel, dateFromKey, keyFromDate, PersonAvatar } from "@/components/app";
 import { cn } from "@/lib/utils";
-import type { AdminBooking, AdminCalendar as Calendar_, AdminCell, AdminMe } from "../../shared/api";
+import type { AdminBooking, AdminCalendar as Calendar_, AdminCell, AdminMe, AdminSettings } from "../../shared/api";
 import { PEOPLE } from "../../shared/config";
 import { addDays, dateKeyOf, startOfWeek } from "../../shared/time";
 import { request, RequestError } from "../api";
 import { capitalize, clock, longDay, shortDay } from "../i18n";
 import { KIND_DOT, LEGEND, type Action } from "./blocks";
+import { applyColors } from "./colors";
 import { MonthView } from "./MonthView";
 import { SettingsDialog } from "./SettingsDialog";
 import { WeekView } from "./WeekView";
@@ -134,6 +135,10 @@ function Owner({ me }: { me: AdminMe }) {
 
   useEffect(() => {
     if (window.matchMedia("(max-width: 1023px)").matches) setSidebar(false);
+    // The owner's own event colours; the built-in palette until they load.
+    request<AdminSettings>("/api/admin/settings")
+      .then((s) => applyColors(s.colors))
+      .catch(() => undefined);
   }, []);
 
   async function act(cells: AdminCell[], action: Action) {

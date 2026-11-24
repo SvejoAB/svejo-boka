@@ -47,6 +47,12 @@
   --ev-closed-fg: #8c1d18;
   --ev-holiday: #fce8e6;
   --ev-holiday-fg: #a50e0e;
+  /* Legend dots and the closed stripes. The owner can change these colours in /admin. */
+  --ev-free-dot: #8ab4f8;
+  --ev-school-dot: #a29bd6;
+  --ev-busy-dot: #5bb5a2;
+  --ev-sport-dot: #6dbf83;
+  --ev-closed-stripe: rgb(179 38 30 / 0.25);
 }
 
 @theme inline {
@@ -93,6 +99,10 @@
   --color-ev-closed-fg: var(--ev-closed-fg);
   --color-ev-holiday: var(--ev-holiday);
   --color-ev-holiday-fg: var(--ev-holiday-fg);
+  --color-ev-free-dot: var(--ev-free-dot);
+  --color-ev-school-dot: var(--ev-school-dot);
+  --color-ev-busy-dot: var(--ev-busy-dot);
+  --color-ev-sport-dot: var(--ev-sport-dot);
 }
 
 @layer base {
@@ -133,7 +143,7 @@
 @utility stripes-closed {
   background-image: repeating-linear-gradient(
     -45deg,
-    rgb(179 38 30 / 0.25) 0 2px,
+    var(--ev-closed-stripe) 0 2px,
     transparent 2px 6px
   );
 }

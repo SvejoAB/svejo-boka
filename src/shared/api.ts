@@ -1,6 +1,7 @@
 // Response shapes shared by the Worker and the client.
 
 import type { CellState, OverrideKind } from "./availability";
+import type { EventColors } from "./colors";
 
 export type Lang = "sv" | "en";
 
@@ -86,6 +87,8 @@ export interface OwnerSettings {
   minNotice: number;
   /** Reminder emails to the booker, minutes before the meeting. */
   reminders: number[];
+  /** Event colours the owner changed in the calendar. */
+  colors: EventColors;
 }
 
 export interface AdminSettings extends OwnerSettings {
