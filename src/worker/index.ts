@@ -9,6 +9,7 @@ import type {
   Lang,
   ManagedBooking,
   PublicAvailability,
+  PublicPerson,
 } from "../shared/api";
 import { horizonWindow } from "../shared/availability";
 import { dateKeyOf, formatClock, isDateKey, minutesOf, startOfWeek } from "../shared/time";
@@ -70,6 +71,7 @@ async function route(req: Request, env: Env, url: URL, ctx: ExecutionContext): P
   const m = req.method;
 
   if (parts[0] === "api") {
+    if (parts[1] === "p" && !parts[2] && m === "GET") return json(Object.values(PEOPLE).map(publicPerson));
     if (parts[1] === "p" && parts[2]) {
       const person = personBySlug(parts[2]);
       if (!person) throw new HttpError(404, "Unknown person", "not_found");
@@ -109,6 +111,10 @@ async function route(req: Request, env: Env, url: URL, ctx: ExecutionContext): P
 }
 
 // ---------- public ----------
+
+function publicPerson(p: Person): PublicPerson {
+  return { slug: p.slug, name: p.name, email: p.email, meetingLength: p.rules.meetingLength };
+}
 
 async function publicAvailability(env: Env, person: Person): Promise<Response> {
   const now = Date.now();

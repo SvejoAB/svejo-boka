@@ -19,7 +19,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { ConfirmCancel, dateFromKey, keyFromDate, PersonAvatar } from "@/components/app";
 import { cn } from "@/lib/utils";
 import type { AdminBooking, AdminCalendar as Calendar_, AdminCell, AdminMe, AdminSettings } from "../../shared/api";
-import { PEOPLE } from "../../shared/config";
 import { addDays, dateKeyOf, startOfWeek } from "../../shared/time";
 import { request, RequestError } from "../api";
 import { capitalize, clock, longDay, shortDay } from "../i18n";
@@ -32,7 +31,7 @@ import { WeekView } from "./WeekView";
 type View = "week" | "month";
 
 const LOGIN_ERRORS: Record<string, string> = {
-  not_allowed: `Det kontot kan inte logga in här. Använd ${Object.values(PEOPLE).map((p) => p.email).join(" eller ")}.`,
+  not_allowed: "Det kontot kan inte logga in här. Logga in med Google-kontot som din bokningssida hör till.",
   scope: "Google gav inte tillgång till kalendern. Logga in igen och godkänn kalenderåtkomsten.",
   state: "Inloggningen tog för lång tid. Försök igen.",
   identity: "Google kunde inte bekräfta kontot. Försök igen.",
