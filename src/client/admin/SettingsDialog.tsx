@@ -217,7 +217,7 @@ export function SettingsDialog(props: { open: boolean; onOpenChange: (open: bool
               <ul className="grid gap-1.5 text-muted-foreground">
                 <li>
                   <span className="text-foreground">Till kunden vid bokning:</span> Googles kalenderinbjudan från din
-                  adress och en bekräftelse från noreply@svejo.se, båda med Meet-länken.
+                  adress och en bekräftelse från bokningssidan, båda med Meet-länken.
                 </li>
                 <li>
                   <span className="text-foreground">Till dig:</span> ett mejl när någon bokar och när någon avbokar.

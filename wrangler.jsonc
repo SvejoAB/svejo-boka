@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "svejo-boka",
+  // Running your own copy: change name, routes, vars and database_id (see README).
   // Account: set CLOUDFLARE_ACCOUNT_ID (for example in .env) before deploying.
   "main": "src/worker/index.ts",
   "compatibility_date": "2026-11-01",
