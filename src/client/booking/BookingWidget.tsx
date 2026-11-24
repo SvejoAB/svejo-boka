@@ -10,8 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { dateFromKey, keyFromDate, LangSwitch, PersonAvatar } from "@/components/app";
 import { cn } from "@/lib/utils";
-import type { BookingRequest, BookingResult, Lang, PublicAvailability } from "../../shared/api";
-import { PEOPLE } from "../../shared/config";
+import type { BookingRequest, BookingResult, Lang, PublicAvailability, PublicPerson } from "../../shared/api";
 import { swedishHoliday } from "../../shared/holidays";
 import { request, RequestError } from "../api";
 import { capitalize, clock, longDay, useLang, type Strings } from "../i18n";
@@ -19,9 +18,9 @@ import { capitalize, clock, longDay, useLang, type Strings } from "../i18n";
 type Step = { kind: "pick" } | { kind: "form"; slot: number } | { kind: "done"; result: BookingResult };
 type MsgKey = "errName" | "errEmail" | "errPhone" | "errMessage" | "errLimit" | "errGeneric" | "errTaken";
 
-export function BookingWidget({ slug }: { slug: string }) {
+export function BookingWidget({ person }: { person: PublicPerson }) {
   const { lang, t, toggle } = useLang();
-  const person = PEOPLE[slug];
+  const slug = person.slug;
   const [data, setData] = useState<PublicAvailability | null>(null);
   const [loadError, setLoadError] = useState<"generic" | "not_connected" | null>(null);
   const [date, setDate] = useState<string | null>(null);
@@ -56,7 +55,7 @@ export function BookingWidget({ slug }: { slug: string }) {
     [data],
   );
   const anyFree = bookableDays.length > 0;
-  const length = data?.meetingLength ?? person.rules.meetingLength;
+  const length = data?.meetingLength ?? person.meetingLength;
 
   function changeMonth(next: Date) {
     setMonth(next);
