@@ -137,6 +137,21 @@ export function dayBlocks(cells: AdminCell[], slots: number[], meetingLength: nu
   return blocks;
 }
 
+/**
+ * What each action would change in a dragged range of half-hours. Past time,
+ * bookings and time beyond the horizon are left alone.
+ */
+export function rangeActions(cells: AdminCell[]): Record<Action, AdminCell[]> {
+  const editable = cells.filter(
+    (c) => !c.past && c.state.kind !== "booked" && !(c.state.kind === "blocked" && c.state.reason === "beyond"),
+  );
+  return {
+    close: editable.filter((c) => c.state.kind === "free"),
+    open: editable.filter((c) => c.state.kind === "blocked"),
+    clear: editable.filter((c) => c.override !== undefined),
+  };
+}
+
 export const LEGEND: [Kind, string][] = [
   ["free", "Bokbar"],
   ["short", "Ledig men för kort"],

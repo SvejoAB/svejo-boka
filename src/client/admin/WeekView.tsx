@@ -1,16 +1,25 @@
 import { Mail, Phone, Video, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type { AdminBooking, AdminCalendar, AdminCell } from "../../shared/api";
 import { swedishHoliday } from "../../shared/holidays";
 import { minutesOf, weekdayOf } from "../../shared/time";
 import { capitalize, clock, longDay, weekdayNames } from "../i18n";
-import { dayBlocks, KIND_CLASS, KIND_DOT, type Action, type Block } from "./blocks";
+import { dayBlocks, KIND_CLASS, KIND_DOT, rangeActions, type Action, type Block } from "./blocks";
 
 const SLOT_PX = 24; // one half-hour
 const DAY_START = 8 * 60;
+
+/** A range of half-hours dragged out in one day column. */
+interface Selection {
+  day: number;
+  from: number;
+  to: number;
+  /** The mouse is released and the actions are shown. */
+  done: boolean;
+}
 
 export function WeekView(props: {
   data: AdminCalendar;
@@ -24,6 +33,14 @@ export function WeekView(props: {
   const scroller = useRef<HTMLDivElement>(null);
   const todayIndex = data.days.findIndex((d) => d.date === props.today);
   const now = useNow();
+  const [selection, setSelection] = useState<Selection | null>(null);
+  const press = useRef<{ day: number; from: number; dragging: boolean } | null>(null);
+  const swallowClick = useRef(false);
+
+  // Drag with the mouse to select several half-hours, like in Google Calendar.
+  // Touch keeps tap-to-open, so scrolling still works.
+  const rowAt = (e: PointerEvent<HTMLDivElement>) =>
+    Math.min(rows.length - 1, Math.max(0, Math.floor((e.clientY - e.currentTarget.getBoundingClientRect().top) / SLOT_PX)));
 
   // On a narrow screen the week scrolls sideways; start at today, not Monday.
   useEffect(() => {
@@ -109,15 +126,62 @@ export function WeekView(props: {
           return (
             <div
               key={d.date}
-              className="@container relative border-l"
+              className="@container relative border-l select-none"
               style={{
                 height: rows.length * SLOT_PX,
                 backgroundImage: `repeating-linear-gradient(to bottom, var(--border) 0 1px, transparent 1px ${SLOT_PX * 2}px)`,
+              }}
+              onPointerDown={(e) => {
+                if (e.pointerType !== "mouse" || e.button !== 0) return;
+                press.current = { day: di, from: rowAt(e), dragging: false };
+              }}
+              onPointerMove={(e) => {
+                const p = press.current;
+                if (!p || p.day !== di) return;
+                if (!(e.buttons & 1)) {
+                  press.current = null; // released outside the column before the drag began
+                  return;
+                }
+                const row = rowAt(e);
+                if (!p.dragging && row === p.from) return;
+                if (!p.dragging) {
+                  p.dragging = true;
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                }
+                setSelection({ day: di, from: p.from, to: row, done: false });
+              }}
+              onPointerUp={() => {
+                const p = press.current;
+                press.current = null;
+                if (!p?.dragging) return;
+                setSelection((s) => (s ? { ...s, done: true } : null));
+                // The release also clicks the block under the mouse; that click must not open its popover.
+                swallowClick.current = true;
+                setTimeout(() => (swallowClick.current = false), 0);
+              }}
+              onPointerCancel={() => {
+                press.current = null;
+                setSelection(null);
+              }}
+              onClickCapture={(e) => {
+                if (!swallowClick.current) return;
+                swallowClick.current = false;
+                e.stopPropagation();
+                e.preventDefault();
               }}
             >
               {blocks.map((b) => (
                 <EventBlock key={`${b.first}:${b.look.key}`} block={b} bookings={data.bookings} onAction={props.onAction} onCancel={props.onCancel} />
               ))}
+              {selection?.day === di && (
+                <RangeSelection
+                  cells={d.cells.slice(Math.min(selection.from, selection.to), Math.max(selection.from, selection.to) + 1)}
+                  first={Math.min(selection.from, selection.to)}
+                  done={selection.done}
+                  onClose={() => setSelection(null)}
+                  onAction={props.onAction}
+                />
+              )}
               {nowVisible && di === todayIndex && (
                 <div aria-hidden className="pointer-events-none absolute inset-x-0 z-10" style={{ top: nowTop }}>
                   <div className="relative h-0.5 bg-now">
@@ -285,6 +349,79 @@ function EventBlock(props: {
                 )}
               </div>
             </>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function RangeSelection(props: {
+  cells: AdminCell[];
+  first: number;
+  done: boolean;
+  onClose: () => void;
+  onAction: (cells: AdminCell[], action: Action) => void;
+}) {
+  const { cells } = props;
+  const start = cells[0].start;
+  const end = cells.at(-1)!.end;
+  const range = `${clock(start)}–${clock(end)}`;
+  const actions = rangeActions(cells);
+  const choices: { action: Action; label: string }[] = [];
+  if (actions.close.length) choices.push({ action: "close", label: `Stäng ${range}` });
+  if (actions.open.length) choices.push({ action: "open", label: `Öppna ${range}` });
+  if (actions.clear.length) choices.push({ action: "clear", label: "Ta bort dina ändringar" });
+
+  const block = (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute left-0.5 right-1.5 z-20 overflow-hidden rounded-md bg-primary px-2 py-0.5 text-xs leading-[18px] text-primary-foreground shadow-lg"
+      style={{ top: props.first * SLOT_PX + 1, height: cells.length * SLOT_PX - 2 }}
+    >
+      <span className="block truncate font-medium tabular-nums">{range}</span>
+    </div>
+  );
+  if (!props.done) return block;
+
+  return (
+    <Popover open onOpenChange={(open) => !open && props.onClose()}>
+      <PopoverAnchor asChild>{block}</PopoverAnchor>
+      <PopoverContent align="start" side="right" className="w-80 p-0">
+        <div className="flex justify-end p-1">
+          <Button variant="ghost" size="icon-sm" className="rounded-full" onClick={props.onClose} aria-label="Stäng">
+            <X />
+          </Button>
+        </div>
+        <div className="grid gap-3 px-5 pb-5">
+          <div className="flex gap-3">
+            <span aria-hidden className="mt-1.5 size-3.5 shrink-0 rounded-full bg-primary" />
+            <div className="min-w-0">
+              <p className="text-lg leading-snug">Markerad tid</p>
+              <p className="text-sm text-muted-foreground">
+                {capitalize(longDay(start, "sv"))} · {range}
+              </p>
+            </div>
+          </div>
+          {choices.length === 0 ? (
+            <p className="pl-6.5 text-sm text-muted-foreground">Den här tiden går inte att ändra.</p>
+          ) : (
+            <div className="grid gap-2 pl-6.5">
+              {choices.map((c, i) => (
+                <Button
+                  key={c.action}
+                  size="sm"
+                  variant={i === 0 ? "default" : "outline"}
+                  className="justify-start rounded-full"
+                  onClick={() => {
+                    props.onClose();
+                    props.onAction(actions[c.action], c.action);
+                  }}
+                >
+                  {c.label}
+                </Button>
+              ))}
+            </div>
           )}
         </div>
       </PopoverContent>
