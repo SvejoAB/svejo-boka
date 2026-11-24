@@ -5,6 +5,15 @@ import type { EventColors } from "./colors";
 
 export type Lang = "sv" | "en";
 
+/** What the booking page may know about a person. Their calendars and rules stay on the server. */
+export interface PublicPerson {
+  slug: string;
+  name: string;
+  /** Shown as "email instead" when no time is free. */
+  email: string;
+  meetingLength: number;
+}
+
 export interface PublicAvailability {
   person: { slug: string; name: string };
   meetingLength: number;
