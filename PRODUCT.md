@@ -18,23 +18,21 @@ Delegated, following Johan's standing preferences (pnpm, React 19, Tailwind, sha
 
 ## Product Purpose
 
-Replace Calendly and cal.com with Johan's own booking widget. Success: Johan sends `boka.svejo.se/johan`, the booker sees only times that are actually free, and a booking never lands on a lecture, lunch, a trip, football or an existing meeting.
+Replace Calendly and cal.com with Johan's own booking widget. Success: Johan sends `boka.svejo.se/johan`, the booker sees only times that are actually free, and Johan decides by hand which lectures, trainings and breaks to keep free.
 
 ## Positioning
 
-Availability follows Johan's real school timetable, not just free/busy: exercise sessions (Övning) and supervision (Handledning) count as free time, every other school activity blocks with a travel gap around it.
+Neutral: only the owner's own busy events and bookings close time on their own. School and team calendars are shown beside the free time, so Johan sees his lectures and closes the ones he attends, in a couple of drags (Johan, 2026-11-24, replacing the earlier timetable rules).
 
 ## Capabilities and Constraints
 
 - Meetings are 1 hour, starting on the hour or half hour, Europe/Stockholm time.
 - Bookable every day of the week, earliest start 08:00, last meeting ends by 20:00.
-- No bookings 12:00–13:00 (lunch).
 - Bookable up to 4 weeks ahead, and no sooner than the notice Johan sets in /admin (default 48 hours).
 - Emails (Resend, from noreply@svejo.se, replies to Johan): confirmation and reminders (default 24 h before, set in /admin) to the booker; new booking and cancellation to Johan. Google's calendar invitation with the Meet link goes to the booker as well.
-- Calendars that count: the owner's own calendar, their TimeEdit course calendars and their sports team's calendar. Other calendars (family, other companies, public holidays) are ignored. The list lives in `src/shared/people.ts`, which is not in git.
-- School events block, with 30 minutes before and after, except Övning and Handledning, which leave Johan bookable. TimeEdit entries without an activity type (notices such as "Anmälan till omtentamen öppnar") block their own time but get no travel gap.
+- Calendars: the owner's own calendar closes time; info calendars (TimeEdit courses, the team's training) are shown in /admin but never close time. Other calendars are ignored. The list lives in `src/shared/people.ts`, which is not in git.
 - Own-calendar events follow Google's Busy/Free setting, also for all-day events. Declined events do not block.
-- Johan can open or close any time by hand; manual changes win over the rules but never over an existing booking.
+- Johan can open or close any time by hand, one half-hour, a whole block or a dragged range; manual changes win over the calendar but never over an existing booking.
 - Every booking creates an event on Johan's calendar with a Google Meet link and invites the booker.
 - Booker form: name, email, phone, optional message.
 - Public page in Swedish with an English switch.

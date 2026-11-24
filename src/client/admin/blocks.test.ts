@@ -13,9 +13,9 @@ const cell = (i: number, rest: Partial<AdminCell>): AdminCell => ({
 describe("rangeActions", () => {
   it("closes the free part of a range and opens the blocked part", () => {
     const cells = [
-      cell(0, { state: { kind: "free", via: "school", label: "Handledning DIT213GU" } }),
-      cell(1, { state: { kind: "free", via: "school", label: "Handledning DIT213GU" } }),
-      cell(2, { state: { kind: "blocked", reason: "school", label: "Föreläsning" } }),
+      cell(0, { state: { kind: "free", via: "rules", label: "Handledning DIT213GU" } }),
+      cell(1, { state: { kind: "free", via: "rules", label: "Handledning DIT213GU" } }),
+      cell(2, { state: { kind: "blocked", reason: "busy", label: "Kundmöte" } }),
     ];
     const a = rangeActions(cells);
     expect(a.close.map((c) => c.start)).toEqual([0, H]);

@@ -36,8 +36,7 @@ export async function loadEvents(env: Env, person: Person, w: Window, fresh: boo
   const c = person.calendars;
   const lists = await Promise.all([
     listEvents(token, c.own, "own", min, max),
-    ...c.school.map((id) => listEvents(token, id, "school", min, max)),
-    ...c.sport.map((id) => listEvents(token, id, "sport", min, max)),
+    ...c.info.map((id) => listEvents(token, id, "info", min, max)),
   ]);
   const events = lists.flat();
   eventCache.set(key, { at: Date.now(), events });

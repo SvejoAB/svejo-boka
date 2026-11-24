@@ -215,7 +215,7 @@ function EventBlock(props: {
   const style = { top: block.first * SLOT_PX + 1, height: cells.length * SLOT_PX - 2 };
 
   // Text on a patterned block gets a solid backing so it stays readable.
-  const backing = look.kind === "gap" ? "w-fit max-w-full rounded-sm bg-ev-gap px-0.5 -mx-0.5" : look.kind === "closed" ? "w-fit max-w-full rounded-sm bg-ev-closed px-0.5 -mx-0.5" : "";
+  const backing = look.kind === "closed" ? "w-fit max-w-full rounded-sm bg-ev-closed px-0.5 -mx-0.5" : "";
   const content = (
     <>
       <span className={cn("block truncate font-medium", backing)}>{look.label}</span>

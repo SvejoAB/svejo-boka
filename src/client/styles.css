@@ -35,23 +35,18 @@
   --ev-booked-fg: #ffffff;
   --ev-free: #e8f0fe;
   --ev-free-fg: #0842a0;
-  --ev-school: #e8e6f6;
-  --ev-school-fg: #3c3489;
+  --ev-info: #e8e6f6;
+  --ev-info-fg: #3c3489;
   --ev-busy: #d4efe9;
   --ev-busy-fg: #00574b;
-  --ev-sport: #e3f3e6;
-  --ev-sport-fg: #0d652d;
-  --ev-gap: #f1f3f4;
-  --ev-gap-fg: #5f6368;
   --ev-closed: #f6e7e6;
   --ev-closed-fg: #8c1d18;
   --ev-holiday: #fce8e6;
   --ev-holiday-fg: #a50e0e;
   /* Legend dots and the closed stripes. The owner can change these colours in /admin. */
   --ev-free-dot: #8ab4f8;
-  --ev-school-dot: #a29bd6;
+  --ev-info-dot: #a29bd6;
   --ev-busy-dot: #5bb5a2;
-  --ev-sport-dot: #6dbf83;
   --ev-closed-stripe: rgb(179 38 30 / 0.25);
 }
 
@@ -87,22 +82,17 @@
   --color-ev-booked-fg: var(--ev-booked-fg);
   --color-ev-free: var(--ev-free);
   --color-ev-free-fg: var(--ev-free-fg);
-  --color-ev-school: var(--ev-school);
-  --color-ev-school-fg: var(--ev-school-fg);
+  --color-ev-info: var(--ev-info);
+  --color-ev-info-fg: var(--ev-info-fg);
   --color-ev-busy: var(--ev-busy);
   --color-ev-busy-fg: var(--ev-busy-fg);
-  --color-ev-sport: var(--ev-sport);
-  --color-ev-sport-fg: var(--ev-sport-fg);
-  --color-ev-gap: var(--ev-gap);
-  --color-ev-gap-fg: var(--ev-gap-fg);
   --color-ev-closed: var(--ev-closed);
   --color-ev-closed-fg: var(--ev-closed-fg);
   --color-ev-holiday: var(--ev-holiday);
   --color-ev-holiday-fg: var(--ev-holiday-fg);
   --color-ev-free-dot: var(--ev-free-dot);
-  --color-ev-school-dot: var(--ev-school-dot);
+  --color-ev-info-dot: var(--ev-info-dot);
   --color-ev-busy-dot: var(--ev-busy-dot);
-  --color-ev-sport-dot: var(--ev-sport-dot);
 }
 
 @layer base {
@@ -134,11 +124,6 @@
   }
 }
 
-/* Lunch and travel gaps: a fine dot grid on grey. */
-@utility dots {
-  background-image: radial-gradient(rgb(0 0 0 / 0.16) 1px, transparent 1.3px);
-  background-size: 6px 6px;
-}
 /* Closed by the owner: red-grey stripes, like a declined event. */
 @utility stripes-closed {
   background-image: repeating-linear-gradient(

@@ -10,10 +10,8 @@ export const PEOPLE: Record<string, Person> = {
     email: "alex@example.com", // the Google account that signs in at /admin
     calendars: {
       own: "alex@example.com",
-      // TimeEdit (or other) course calendars, as Google calendar IDs
-      school: [],
-      // Training and matches
-      sport: [],
+      // Calendars shown in /admin that never close the time, e.g. a school timetable (Google calendar IDs)
+      info: [],
     },
     rules: DEFAULT_RULES,
   },
