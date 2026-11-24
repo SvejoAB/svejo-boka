@@ -111,7 +111,7 @@ function baseLook(cell: AdminCell, bookable: boolean): Look {
     case "busy":
       return { key: `busy:${label}`, kind: "busy", label, action: "open", reason: "Upptagen i din kalender." };
     case "sport":
-      return { key: `sport:${label}`, kind: "sport", label: label.replace(/\s*\/\/.*$/, ""), action: "open", reason: "IK Virgo. Stängd för bokning." };
+      return { key: `sport:${label}`, kind: "sport", label: label.replace(/\s*\/\/.*$/, ""), action: "open", reason: "Träning. Stängd för bokning." };
     case "allday":
       return { key: `allday:${label}`, kind: "allday", label, action: "open", reason: `Heldag: ${label}. Stängd för bokning.` };
   }
